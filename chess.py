@@ -6,8 +6,9 @@ import datetime
 import argparse
 import sys
 from PIL import Image
-
-
+from pathlib import Path
+from os import walk, listdir
+from os.path import isfile, join
 
 
 A4_SIZE = (2480, 3508)
@@ -90,13 +91,21 @@ def main():
                         help='filenames of images to concatinate to pdf')
     parser.add_argument('--save_to', dest='pdf_path', action='store', default=BASE_DIR,
                         help='path to save the result pdf')
-
+    parser.add_argument('--no-files', dest='no_files', action='store_true')
+    parser.set_defaults(no_files=False) 
     args = parser.parse_args(sys.argv[1:])
-
-    images = [
-        Image.open(f)
-        for f in args.files[0]
-    ]
+    
+    images = []
+    filenames = []
+    if args.no_files:
+        easy = ["easy/" + i for i in [f for f in listdir("easy/") if isfile(join("easy", f))]][1:]
+        hard = ["hard/" + i for i in [f for f in listdir("hard/") if isfile(join("hard", f))]][1:]
+        filenames = easy[:4] + hard[:2]     
+    else:
+        filenames = args.files[0]
+    for f in filenames:
+        images.append(Image.open(f))
+        Path(f).rename('/'.join(f.split('/')[:-1]) + '/used/' + f.split('/')[-1]) 
     save_pdf(generate_pages(images), args.pdf_path)
 
 
